@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Streamlined Query App</title>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG CHATBOT</h1>
+        <form id="upload-form">
+            <label for="file">Upload PDF:</label>
+            <input type="file" id="file" name="file" accept=".pdf" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="upload-status"></div>
+
+        <form id="query-form">
+            <label for="query">Ask a Query:</label>
+            <textarea id="query" name="query" required></textarea>
+            <button type="submit">Answer</button>
+        </form>
+        <div id="query-result"></div>
+    </div>
+    <script>
+        const uploadForm = document.getElementById("upload-form");
+        uploadForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+            const response = await fetch("/upload", { method: "POST", body: formData });
+            const result = await response.json();
+            document.getElementById("upload-status").innerText = JSON.stringify(result);
+        });
+
+        const queryForm = document.getElementById("query-form");
+        queryForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const query = document.getElementById("query").value;
+            const response = await fetch("/query", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query })
+            });
+            const result = await response.json();
+
+            // Get the answer and sources from the response
+            const formattedAnswer = result.answer;
+            const sources = result.sources;
+            document.getElementById("query-result").innerHTML = `
+                <h2>Answer:</h2>
+                <p>${formattedAnswer}</p>
+                <h3>Sources:</h3>
+                <ul>
+                    ${sources.map(source => `<li>${source.source}</li>`).join('')}
+                </ul>
+            `;
+        });
+    </script>
+</body>
+</html>
